@@ -1,5 +1,5 @@
 {
-  "description": "Journel",
+  "description": "Journal",
   "version": "1.0.0",
   "keywords": [
     "pile"
@@ -203,7 +203,7 @@
     "webpack-merge": "^6.0.1"
   },
   "build": {
-    "productName": "Journel",
+    "productName": "Journal",
     "appId": "com.integrofy.journel",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
@@ -274,7 +274,7 @@
       {
         "provider": "github",
         "owner": "Integrofy",
-        "repo": "Journel"
+        "repo": "Journal"
       }
     ]
   },

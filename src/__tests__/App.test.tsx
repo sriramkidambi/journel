@@ -4,9 +4,11 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '../renderer/App';
 
 jest.mock('../renderer/pages/Home', () => () => <div>Home</div>);
-jest.mock('../renderer/pages/Pile', () => () => <div>Pile</div>);
+jest.mock('../renderer/pages/Journal', () => () => <div>Journal</div>);
 jest.mock('../renderer/pages/License', () => () => <div>License</div>);
-jest.mock('../renderer/pages/CreatePile', () => () => <div>CreatePile</div>);
+jest.mock('../renderer/pages/CreateJournal', () => () => (
+  <div>CreateJournal</div>
+));
 
 describe('App', () => {
   it('should render', () => {
@@ -14,8 +16,8 @@ describe('App', () => {
       render(
         <MemoryRouter>
           <App />
-        </MemoryRouter>
-      )
+        </MemoryRouter>,
+      ),
     ).toBeTruthy();
   });
 });

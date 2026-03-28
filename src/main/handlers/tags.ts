@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
-import pileTags from '../utils/pileTags';
+import pileTags from '../utils/journalTags';
 
-ipcMain.handle('tags-load', (event, pilePath) => {
-  const tags = pileTags.load(pilePath);
+ipcMain.handle('tags-load', (event, journalPath) => {
+  const tags = pileTags.load(journalPath);
   return tags;
 });
 

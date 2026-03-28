@@ -23,8 +23,8 @@ export const getPost = async (postPath) => {
 };
 
 export const attachToPostCreator =
-  (setPost, getCurrentPilePath) => async (imageData, fileExtension) => {
-    const storePath = getCurrentPilePath();
+  (setPost, getCurrentJournalPath) => async (imageData, fileExtension) => {
+    const storePath = getCurrentJournalPath();
 
     let newAttachments = [];
     if (imageData) {
@@ -66,7 +66,7 @@ export const attachToPostCreator =
   };
 
 export const detachFromPostCreator =
-  (setPost, getCurrentPilePath) => (attachmentPath) => {
+  (setPost, getCurrentJournalPath) => (attachmentPath) => {
     setPost((post) => {
       let newPost = JSON.parse(JSON.stringify(post));
       const newAtt = newPost.data.attachments.filter(
@@ -76,7 +76,7 @@ export const detachFromPostCreator =
       newPost.data.attachments = newAtt;
 
       const fullPath = window.electron.joinPath(
-        getCurrentPilePath(),
+        getCurrentJournalPath(),
         attachmentPath
       );
 

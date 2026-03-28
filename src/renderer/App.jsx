@@ -2,10 +2,10 @@ import './App.scss';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Home from './pages/Home';
-import Pile from './pages/Pile';
+import Journal from './pages/Journal';
 import License from './pages/License';
-import CreatePile from './pages/CreatePile';
-import { PilesContextProvider } from './context/PilesContext';
+import CreateJournal from './pages/CreateJournal';
+import { JournalsContextProvider } from './context/JournalsContext';
 import { IndexContextProvider } from './context/IndexContext';
 import { TagsContextProvider } from './context/TagsContext';
 import { TimelineContextProvider } from './context/TimelineContext';
@@ -44,7 +44,7 @@ export default function App() {
   const location = useLocation();
 
   return (
-    <PilesContextProvider>
+    <JournalsContextProvider>
       <ToastsContextProvider>
         <AutoUpdateContextProvider>
           <AIContextProvider>
@@ -72,19 +72,37 @@ export default function App() {
                             }
                           />
                           <Route
-                            path="/new-pile"
+                            path="/new-journal"
                             element={
-                              <AnimatedPage _key="new-pile">
-                                <CreatePile />
+                              <AnimatedPage _key="new-journal">
+                                <CreateJournal />
                               </AnimatedPage>
                             }
                           />
-                          <Route path="/pile">
+                          <Route
+                            path="/new-pile"
+                            element={
+                              <AnimatedPage _key="new-pile">
+                                <CreateJournal />
+                              </AnimatedPage>
+                            }
+                          />
+                          <Route path="/journal">
                             <Route
-                              path=":pileName"
+                              path=":journalName"
                               element={
-                                <AnimatedPage down _key="pile">
-                                  <Pile />
+                                <AnimatedPage down _key="journal">
+                                  <Journal />
+                                </AnimatedPage>
+                              }
+                            />
+                          </Route>
+                          <Route path="/journal">
+                            <Route
+                              path=":journalName"
+                              element={
+                                <AnimatedPage down _key="journal">
+                                  <Journal />
                                 </AnimatedPage>
                               }
                             />
@@ -99,6 +117,6 @@ export default function App() {
           </AIContextProvider>
         </AutoUpdateContextProvider>
       </ToastsContextProvider>
-    </PilesContextProvider>
+    </JournalsContextProvider>
   );
 }

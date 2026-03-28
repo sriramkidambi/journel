@@ -6,25 +6,25 @@ import {
   useCallback,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { usePilesContext } from './PilesContext';
+import { useJournalsContext } from './JournalsContext';
 import { useAIContext } from './AIContext';
 import { useToastsContext } from './ToastsContext';
 
 export const LinksContext = createContext();
 
 export const LinksContextProvider = ({ children }) => {
-  const { currentPile, getCurrentPilePath } = usePilesContext();
-  const { ai } = useAIContext();
+  const { currentJournal, getCurrentJournalPath } = useJournalsContext();
+  const { ai, model } = useAIContext();
   const { addNotification, updateNotification, removeNotification } =
     useToastsContext();
 
   const getLink = useCallback(
     async (url) => {
-      const pilePath = getCurrentPilePath();
+      const journalPath = getCurrentJournalPath();
       const preview = await window.electron.ipc.invoke(
         'links-get',
-        pilePath,
-        url
+        journalPath,
+        url,
       );
 
       // return cached preview if available
@@ -44,7 +44,7 @@ export const LinksContextProvider = ({ children }) => {
       updateNotification(url, 'thinking', 'Generating preview...');
       const aiCard = await generateMeta(url).catch(() => {
         console.log(
-          'Failed to generate AI link preview, a basic preview will be used.'
+          'Failed to generate AI link preview, a basic preview will be used.',
         );
         updateNotification(url, 'failed', 'AI link preview failed');
         return null;
@@ -69,15 +69,15 @@ export const LinksContextProvider = ({ children }) => {
 
       return linkPreview;
     },
-    [currentPile]
+    [currentJournal],
   );
 
   const setLink = useCallback(
     async (url, data) => {
-      const pilePath = getCurrentPilePath();
-      window.electron.ipc.invoke('links-set', pilePath, url, data);
+      const journalPath = getCurrentJournalPath();
+      window.electron.ipc.invoke('links-set', journalPath, url, data);
     },
-    [currentPile]
+    [currentJournal],
   );
 
   const getPreview = async (url) => {
@@ -99,6 +99,10 @@ export const LinksContextProvider = ({ children }) => {
   };
 
   const generateMeta = async (url) => {
+    if (!ai?.instance) {
+      return null;
+    }
+
     const { text, images, links } = await getContent(url);
     const trimmedContent = trimContent(text);
 
@@ -136,8 +140,8 @@ export const LinksContextProvider = ({ children }) => {
         }`,
     });
 
-    const response = await ai.chat.completions.create({
-      model: 'gpt-4o',
+    const response = await ai.instance.chat.completions.create({
+      model,
       max_tokens: 500,
       messages: context,
       response_format: {

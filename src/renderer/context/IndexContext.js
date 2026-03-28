@@ -6,26 +6,29 @@ import {
   useCallback,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { usePilesContext } from './PilesContext';
+import { useJournalsContext } from './JournalsContext';
 
 export const IndexContext = createContext();
 
 export const IndexContextProvider = ({ children }) => {
-  const { currentPile, getCurrentPilePath } = usePilesContext();
+  const { currentJournal, getCurrentJournalPath } = useJournalsContext();
   const [filters, setFilters] = useState();
   const [searchOpen, setSearchOpen] = useState(false);
   const [index, setIndex] = useState(new Map());
   const [latestThreads, setLatestThreads] = useState([]);
 
   useEffect(() => {
-    if (currentPile) {
-      loadIndex(getCurrentPilePath());
+    if (currentJournal) {
+      loadIndex(getCurrentJournalPath());
       loadLatestThreads();
     }
-  }, [currentPile]);
+  }, [currentJournal]);
 
-  const loadIndex = useCallback(async (pilePath) => {
-    const newIndex = await window.electron.ipc.invoke('index-load', pilePath);
+  const loadIndex = useCallback(async (journalPath) => {
+    const newIndex = await window.electron.ipc.invoke(
+      'index-load',
+      journalPath,
+    );
     const newMap = new Map(newIndex);
     setIndex(newMap);
   }, []);
@@ -37,7 +40,7 @@ export const IndexContextProvider = ({ children }) => {
   }, []);
 
   const prependIndex = useCallback((key, value) => {
-    console.log('prepend index', key, value)
+    console.log('prepend index', key, value);
     setIndex((prevIndex) => {
       const newIndex = new Map([[key, value], ...prevIndex]);
       return newIndex;
@@ -47,17 +50,17 @@ export const IndexContextProvider = ({ children }) => {
   const addIndex = useCallback(
     async (newEntryPath, parentPath = null) => {
       console.time('index-add-time');
-      const pilePath = getCurrentPilePath();
+      const journalPath = getCurrentJournalPath();
 
       await window.electron.ipc
-      .invoke('index-add', newEntryPath)
-      .then((index) => {
-        // setIndex(index);
-        loadLatestThreads();
-      });
+        .invoke('index-add', newEntryPath)
+        .then((index) => {
+          // setIndex(index);
+          loadLatestThreads();
+        });
       console.timeEnd('index-add-time');
     },
-    [currentPile]
+    [currentJournal],
   );
 
   const regenerateEmbeddings = () => {
@@ -112,7 +115,7 @@ export const IndexContextProvider = ({ children }) => {
     getThreadsAsText,
     latestThreads,
     regenerateEmbeddings,
-    prependIndex
+    prependIndex,
   };
 
   return (

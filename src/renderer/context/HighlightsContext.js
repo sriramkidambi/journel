@@ -6,12 +6,12 @@ import {
   useCallback,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { usePilesContext } from './PilesContext';
+import { useJournalsContext } from './JournalsContext';
 
 export const HighlightsContext = createContext();
 
 export const HighlightsContextProvider = ({ children }) => {
-  const { currentPile, getCurrentPilePath } = usePilesContext();
+  const { currentJournal, getCurrentJournalPath } = useJournalsContext();
   const [open, setOpen] = useState(false);
   const [highlights, setHighlights] = useState(new Map());
 
@@ -24,15 +24,15 @@ export const HighlightsContextProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (currentPile) {
-      loadHighlights(getCurrentPilePath());
+    if (currentJournal) {
+      loadHighlights(getCurrentJournalPath());
     }
-  }, [currentPile]);
+  }, [currentJournal]);
 
-  const loadHighlights = useCallback(async (pilePath) => {
+  const loadHighlights = useCallback(async (journalPath) => {
     const newHighlights = await window.electron.ipc.invoke(
       'highlights-load',
-      pilePath
+      journalPath,
     );
     const newMap = new Map(newHighlights);
     setHighlights(newMap);

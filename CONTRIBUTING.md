@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for considering contributing to Pile!
+Thanks for considering contributing to Journal!
 
 ## Opening issues
 

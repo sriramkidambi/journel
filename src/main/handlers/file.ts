@@ -1,7 +1,7 @@
 import { ipcMain, app, dialog } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import pileHelper from '../utils/pileHelper';
+import pileHelper from '../utils/journalHelper';
 import matter from 'gray-matter';
 
 ipcMain.on('update-file', (event, { path, content }) => {
@@ -38,8 +38,23 @@ ipcMain.handle('get-file', async (event, filePath) => {
 
 ipcMain.on('get-config-file-path', (event) => {
   const userHomeDirectoryPath = app.getPath('home');
-  const pilesConfig = path.join(userHomeDirectoryPath, 'Piles', 'piles.json');
-  event.returnValue = pilesConfig;
+  const journalsDir = path.join(userHomeDirectoryPath, 'Journals');
+  const journalsConfig = path.join(journalsDir, 'journals.json');
+  const legacyPilesConfig = path.join(
+    userHomeDirectoryPath,
+    'Piles',
+    'piles.json'
+  );
+
+  if (!fs.existsSync(journalsDir)) {
+    fs.mkdirSync(journalsDir, { recursive: true });
+  }
+
+  if (!fs.existsSync(journalsConfig) && fs.existsSync(legacyPilesConfig)) {
+    fs.copyFileSync(legacyPilesConfig, journalsConfig);
+  }
+
+  event.returnValue = journalsConfig;
 });
 
 ipcMain.on('open-file-dialog', async (event) => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { usePilesContext } from 'renderer/context/PilesContext';
+import { useJournalsContext } from 'renderer/context/JournalsContext';
 import * as fileOperations from '../utils/fileOperations';
 import { useIndexContext } from 'renderer/context/IndexContext';
 import {
@@ -42,7 +42,7 @@ function usePost(
     reloadParentPost = () => {},
   } = {}
 ) {
-  const { currentPile, getCurrentPilePath } = usePilesContext();
+  const { currentJournal, getCurrentJournalPath } = useJournalsContext();
   const { addIndex, removeIndex, refreshIndex, updateIndex, prependIndex } =
     useIndexContext();
   const [updates, setUpdates] = useState(0);
@@ -51,9 +51,9 @@ function usePost(
 
   useEffect(() => {
     if (!postPath) return;
-    const fullPath = window.electron.joinPath(getCurrentPilePath(), postPath);
+    const fullPath = window.electron.joinPath(getCurrentJournalPath(), postPath);
     setPath(fullPath);
-  }, [postPath, currentPile]);
+  }, [postPath, currentJournal]);
 
   useEffect(() => {
     if (!path) return;
@@ -72,7 +72,7 @@ function usePost(
 
       const saveToPath = path
         ? path
-        : fileOperations.getFilePathForNewPost(currentPile.path);
+        : fileOperations.getFilePathForNewPost(currentJournal.path);
       const directoryPath = fileOperations.getDirectoryPath(saveToPath);
       const now = new Date().toISOString();
       const content = post.content;
@@ -99,7 +99,7 @@ function usePost(
         }
 
         const postRelativePath = saveToPath.replace(
-          getCurrentPilePath() + window.electron.pathSeparator,
+          getCurrentJournalPath() + window.electron.pathSeparator,
           ''
         );
         prependIndex(postRelativePath, data); // Add the file to the index
@@ -118,7 +118,7 @@ function usePost(
     const relativeReplyPath = window.electron.joinPath(
       ...replyPostPath.split(/[/\\]/).slice(-3)
     );
-    const fullParentPostPath = getCurrentPilePath(parentPostPath);
+    const fullParentPostPath = getCurrentJournalPath(parentPostPath);
     const parentPost = await getPost(fullParentPostPath);
     const content = parentPost.content;
     const data = {
@@ -133,11 +133,11 @@ function usePost(
 
   const deletePost = useCallback(async () => {
     if (!postPath) return null;
-    const fullPostPath = getCurrentPilePath(postPath);
+    const fullPostPath = getCurrentJournalPath(postPath);
 
     // if reply, remove from parent
     if (post.data.isReply && parentPostPath) {
-      const fullParentPostPath = getCurrentPilePath(parentPostPath);
+      const fullParentPostPath = getCurrentJournalPath(parentPostPath);
       const parentPost = await getPost(fullParentPostPath);
       const content = parentPost.content;
       const newReplies = parentPost.data.replies.filter((p) => {
@@ -166,8 +166,8 @@ function usePost(
       setHighlight: setHighlightCreator(post, setPost, savePost),
       addTag: tagActionsCreator(setPost, 'add'),
       removeTag: tagActionsCreator(setPost, 'remove'),
-      attachToPost: attachToPostCreator(setPost, getCurrentPilePath),
-      detachFromPost: detachFromPostCreator(setPost, getCurrentPilePath),
+      attachToPost: attachToPostCreator(setPost, getCurrentJournalPath),
+      detachFromPost: detachFromPostCreator(setPost, getCurrentJournalPath),
       resetPost: () => setPost(defaultPost),
     }),
     [post]

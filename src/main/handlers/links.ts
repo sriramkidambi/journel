@@ -1,14 +1,14 @@
 import { ipcMain } from 'electron';
-import pileLinks from '../utils/pileLinks';
+import pileLinks from '../utils/journalLinks';
 import { getLinkPreview, getLinkContent } from '../utils/linkPreview';
 
-ipcMain.handle('links-get', (event, pilePath, url) => {
-  const data = pileLinks.get(pilePath, url);
+ipcMain.handle('links-get', (event, journalPath, url) => {
+  const data = pileLinks.get(journalPath, url);
   return data;
 });
 
-ipcMain.handle('links-set', (event, pilePath, url, data) => {
-  const status = pileLinks.set(pilePath, url, data);
+ipcMain.handle('links-set', (event, journalPath, url, data) => {
+  const status = pileLinks.set(journalPath, url, data);
   return status;
 });
 

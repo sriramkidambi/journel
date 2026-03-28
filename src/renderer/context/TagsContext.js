@@ -6,22 +6,22 @@ import {
   useCallback,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { usePilesContext } from './PilesContext';
+import { useJournalsContext } from './JournalsContext';
 
 export const TagsContext = createContext();
 
 export const TagsContextProvider = ({ children }) => {
-  const { currentPile, getCurrentPilePath } = usePilesContext();
+  const { currentJournal, getCurrentJournalPath } = useJournalsContext();
   const [tags, setTags] = useState(new Map());
 
   useEffect(() => {
-    if (currentPile) {
-      loadTags(getCurrentPilePath());
+    if (currentJournal) {
+      loadTags(getCurrentJournalPath());
     }
-  }, [currentPile]);
+  }, [currentJournal]);
 
-  const loadTags = useCallback(async (pilePath) => {
-    const newTags = await window.electron.ipc.invoke('tags-load', pilePath);
+  const loadTags = useCallback(async (journalPath) => {
+    const newTags = await window.electron.ipc.invoke('tags-load', journalPath);
     const newMap = new Map(newTags);
     setTags(newMap);
   }, []);

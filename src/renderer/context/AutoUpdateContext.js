@@ -47,7 +47,7 @@ export const AutoUpdateContextProvider = ({ children }) => {
   const handleUpdateNotAvailable = () => {
     addNotification({
       id: 'auto-update',
-      message: 'Journel is up-to-date',
+      message: 'Journal is up-to-date',
       type: 'success',
       dismissTime: 5000,
       immediate: false,
@@ -67,16 +67,16 @@ export const AutoUpdateContextProvider = ({ children }) => {
     return () => {
       window.electron.ipc.removeListener(
         'update_available',
-        handleUpdateAvailable
+        handleUpdateAvailable,
       );
       window.electron.ipc.removeListener(
         'update_downloaded',
-        handleUpdateDownloaded
+        handleUpdateDownloaded,
       );
       window.electron.ipc.removeListener('update_error', handleUpdateError);
       window.electron.ipc.removeListener(
         'update_not_available',
-        handleUpdateNotAvailable
+        handleUpdateNotAvailable,
       );
     };
   }, []);

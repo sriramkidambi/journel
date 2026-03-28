@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
-import pileHighlights from '../utils/pileHighlights';
+import pileHighlights from '../utils/journalHighlights';
 
-ipcMain.handle('highlights-load', (event, pilePath) => {
-  const highlights = pileHighlights.load(pilePath);
+ipcMain.handle('highlights-load', (event, journalPath) => {
+  const highlights = pileHighlights.load(journalPath);
   return highlights;
 });
 

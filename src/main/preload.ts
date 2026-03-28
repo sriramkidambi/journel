@@ -31,7 +31,7 @@ const electronHandler = {
       ipcRenderer.removeListener(channel, func);
     },
   },
-  setupPilesFolder: (path: string) => {
+  setupJournalsFolder: (path: string) => {
     fs.existsSync(path);
   },
   getConfigPath: () => {
@@ -70,6 +70,8 @@ const electronHandler = {
   settingsSet: (key: string, value: string) =>
     ipcRenderer.invoke('electron-store-set', key, value),
 };
+
+electronHandler.setupPilesFolder = electronHandler.setupJournalsFolder;
 
 contextBridge.exposeInMainWorld('electron', electronHandler);
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import styles from './Home.module.scss';
 import { Link } from 'react-router-dom';
-import { usePilesContext } from '../../context/PilesContext';
-import DeletePile from './DeletePile';
+import { useJournalsContext } from '../../context/JournalsContext';
+import DeleteJournal from './DeleteJournal';
 import Logo from './logo';
-import OpenPileFolder from './OpenPileFolder';
+import OpenJournalFolder from './OpenJournalFolder';
 
 const quotes = [
   'One moment at a time',
@@ -18,7 +18,7 @@ const quotes = [
 ];
 
 export default function Home() {
-  const { piles } = usePilesContext();
+  const { journals } = useJournalsContext();
   const [folderExists, setFolderExists] = useState(false);
   const [quote, setQuote] = useState(quotes[0]);
 
@@ -27,8 +27,8 @@ export default function Home() {
     setQuote(quote);
   }, []);
 
-  const renderPiles = () => {
-    if (piles.length == 0)
+  const renderJournals = () => {
+    if (journals.length == 0)
       return (
         <div className={styles.noPiles}>
           No existing journals.
@@ -37,20 +37,20 @@ export default function Home() {
         </div>
       );
 
-    return piles.map((pile: any) => {
+    return journals.map((journal: any) => {
       return (
         <div
-          className={`${pile.theme && pile.theme + 'Theme'} ${styles.pile}`}
-          key={pile.path}
+          className={`${journal.theme && journal.theme + 'Theme'} ${styles.pile}`}
+          key={journal.path}
         >
           <div className={styles.left}>
-            <div className={styles.name}>{pile.name}</div>
-            {/* <div className={styles.src}>{pile.path}</div> */}
+            <div className={styles.name}>{journal.name}</div>
+            {/* <div className={styles.src}>{journal.path}</div> */}
           </div>
           <div className={styles.right}>
-            <DeletePile pile={pile} />
-            <OpenPileFolder pile={pile} />
-            <Link to={`/pile/${pile.name}`} className={styles.button}>
+            <DeleteJournal journal={journal} />
+            <OpenJournalFolder journal={journal} />
+            <Link to={`/journal/${journal.name}`} className={styles.button}>
               Open
             </Link>
           </div>
@@ -67,17 +67,17 @@ export default function Home() {
             <div className={styles.iconHolder}>
               <Logo className={styles.icon} />
             </div>
-            <div className={styles.name}>Journel</div>
+            <div className={styles.name}>Journal</div>
           </div>
         </div>
 
-        <Link to="/new-pile" className={styles.create}>
+        <Link to="/new-journal" className={styles.create}>
           Create a new journal →
         </Link>
 
         <div className={styles.or}>or open an existing journal</div>
 
-        <div className={styles.piles}>{renderPiles()}</div>
+        <div className={styles.piles}>{renderJournals()}</div>
 
         <div className={styles.footer}>
           <a href="https://integrofy.com" target="_blank" rel="noreferrer">

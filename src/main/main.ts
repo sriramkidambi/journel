@@ -28,9 +28,10 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-if (isDebug) {
-  require('electron-debug')();
-}
+const enableElectronDebug = async () => {
+  const { default: electronDebug } = await import('electron-debug');
+  electronDebug();
+};
 
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
@@ -45,17 +46,18 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const setupPilesFolder = () => {
+const setupJournalsFolder = () => {
   const userHomeDirectoryPath = app.getPath('home');
-  const pilesFolder = path.join(userHomeDirectoryPath, 'Piles');
+  const journalsFolder = path.join(userHomeDirectoryPath, 'Journals');
 
-  if (!fs.existsSync(pilesFolder)) {
-    fs.mkdirSync(pilesFolder);
+  if (!fs.existsSync(journalsFolder)) {
+    fs.mkdirSync(journalsFolder);
   }
 };
 
 const createWindow = async () => {
   if (isDebug) {
+    await enableElectronDebug();
     await installExtensions();
   }
 
@@ -143,7 +145,7 @@ app
       return net.fetch('file://' + filePath);
     });
 
-    setupPilesFolder();
+    setupJournalsFolder();
     createWindow();
 
     app.on('activate', () => {

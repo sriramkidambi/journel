@@ -21,7 +21,7 @@ export function convertHTMLToPlainText(html: string) {
     /<a [^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/gi,
     (match, href, anchorText) => {
       return href; // Replace with the href content
-    }
+    },
   );
 
   // Strip out remaining <p>, <strong> tags
@@ -37,7 +37,7 @@ export async function walk(dir: string, root = true) {
       const filePath = path.join(dir, file);
       const stats = await stat(filePath);
       if (stats.isDirectory()) {
-        //Validate by YEAR/MMM:2024/Nov folder structure
+        //Validate by YEAR/MMM:2026/Nov folder structure
         if (
           !root &&
           !(
@@ -51,7 +51,7 @@ export async function walk(dir: string, root = true) {
       } else if (stats.isFile() && filePath.endsWith('.md')) {
         return filePath;
       }
-    })
+    }),
   );
 
   return files.flat().filter(Boolean);

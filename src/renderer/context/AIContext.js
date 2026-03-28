@@ -6,36 +6,98 @@ import {
   useCallback,
 } from 'react';
 import OpenAI from 'openai';
-import { usePilesContext } from './PilesContext';
+import { useJournalsContext } from './JournalsContext';
 import { useElectronStore } from 'renderer/hooks/useElectronStore';
 
 const OLLAMA_URL = 'http://localhost:11434/api';
 const OPENAI_URL = 'https://api.openai.com/v1';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1';
 const DEFAULT_PROMPT =
   'You are an AI within a journaling app. Your job is to help the user reflect on their thoughts in a thoughtful and kind manner. The user can never directly address you or directly respond to you. Try not to repeat what the user said, instead try to seed new ideas, encourage or debate. Keep your responses concise, but meaningful.';
 
 export const AIContext = createContext();
 
 export const AIContextProvider = ({ children }) => {
-  const { currentPile, updateCurrentPile } = usePilesContext();
+  const { currentJournal, updateCurrentJournal } = useJournalsContext();
   const [ai, setAi] = useState(null);
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
-  const [pileAIProvider, setPileAIProvider] = useElectronStore(
-    'pileAIProvider',
+  const [aiProvider, setAiProvider] = useElectronStore(
+    'aiProvider',
     'openai'
   );
-  const [model, setModel] = useElectronStore('model', 'gpt-4o');
-  const [embeddingModel, setEmbeddingModel] = useElectronStore(
-    'embeddingModel',
+  const [openAIModel, setOpenAIModel] = useElectronStore(
+    'openAIModel',
+    'gpt-4o'
+  );
+  const [openRouterModel, setOpenRouterModel] = useElectronStore(
+    'openRouterModel',
+    'openai/gpt-4o-mini'
+  );
+  const [ollamaModel, setOllamaModel] = useElectronStore(
+    'ollamaModel',
+    'llama3.1:8b'
+  );
+  const [openAIEmbeddingModel, setOpenAIEmbeddingModel] = useElectronStore(
+    'openAIEmbeddingModel',
+    'text-embedding-3-small'
+  );
+  const [openRouterEmbeddingModel, setOpenRouterEmbeddingModel] =
+    useElectronStore('openRouterEmbeddingModel', 'text-embedding-3-small');
+  const [ollamaEmbeddingModel, setOllamaEmbeddingModel] = useElectronStore(
+    'ollamaEmbeddingModel',
     'mxbai-embed-large'
   );
-  const [baseUrl, setBaseUrl] = useElectronStore('baseUrl', OPENAI_URL);
+  const [openAIBaseUrl, setOpenAIBaseUrl] = useElectronStore(
+    'openAIBaseUrl',
+    OPENAI_URL
+  );
+  const [openRouterBaseUrl, setOpenRouterBaseUrl] = useElectronStore(
+    'openRouterBaseUrl',
+    OPENROUTER_URL
+  );
+
+  const model =
+    aiProvider === 'ollama'
+      ? ollamaModel
+      : aiProvider === 'openrouter'
+      ? openRouterModel
+      : openAIModel;
+
+  const setModel =
+    aiProvider === 'ollama'
+      ? setOllamaModel
+      : aiProvider === 'openrouter'
+      ? setOpenRouterModel
+      : setOpenAIModel;
+
+  const embeddingModel =
+    aiProvider === 'ollama'
+      ? ollamaEmbeddingModel
+      : aiProvider === 'openrouter'
+      ? openRouterEmbeddingModel
+      : openAIEmbeddingModel;
+
+  const setEmbeddingModel =
+    aiProvider === 'ollama'
+      ? setOllamaEmbeddingModel
+      : aiProvider === 'openrouter'
+      ? setOpenRouterEmbeddingModel
+      : setOpenAIEmbeddingModel;
+
+  const baseUrl =
+    aiProvider === 'openrouter' ? openRouterBaseUrl : openAIBaseUrl;
+
+  const setBaseUrl =
+    aiProvider === 'openrouter' ? setOpenRouterBaseUrl : setOpenAIBaseUrl;
 
   const setupAi = useCallback(async () => {
-    const key = await window.electron.ipc.invoke('get-ai-key');
-    if (!key && pileAIProvider !== 'ollama') return;
+    const key = await window.electron.ipc.invoke('get-ai-key', aiProvider);
+    if (!key && aiProvider !== 'ollama') {
+      setAi(null);
+      return;
+    }
 
-    if (pileAIProvider === 'ollama') {
+    if (aiProvider === 'ollama') {
       setAi({ type: 'ollama' });
     } else {
       const openaiInstance = new OpenAI({
@@ -43,17 +105,17 @@ export const AIContextProvider = ({ children }) => {
         apiKey: key,
         dangerouslyAllowBrowser: true,
       });
-      setAi({ type: 'openai', instance: openaiInstance });
+      setAi({ type: aiProvider, instance: openaiInstance });
     }
-  }, [pileAIProvider, baseUrl]);
+  }, [aiProvider, baseUrl]);
 
   useEffect(() => {
-    if (currentPile) {
-      console.log('🧠 Syncing current pile');
-      if (currentPile.AIPrompt) setPrompt(currentPile.AIPrompt);
+    if (currentJournal) {
+      console.log('🧠 Syncing current journal');
+      if (currentJournal.AIPrompt) setPrompt(currentJournal.AIPrompt);
       setupAi();
     }
-  }, [currentPile, baseUrl, setupAi]);
+  }, [currentJournal, baseUrl, setupAi]);
 
   const generateCompletion = useCallback(
     async (context, callback) => {
@@ -124,15 +186,11 @@ export const AIContextProvider = ({ children }) => {
   );
 
   const checkApiKeyValidity = async () => {
-    // TODO: Add regex for OpenAPI and Ollama API keys
-    const key = await window.electron.ipc.invoke('get-ai-key');
-    
-    if (key !== null) {
-      return true;
-    }
+    if (aiProvider === 'ollama') return true;
 
-    return false;
-  }
+    const key = await window.electron.ipc.invoke('get-ai-key', aiProvider);
+    return key !== null;
+  };
 
   const AIContextValue = {
     ai,
@@ -140,20 +198,21 @@ export const AIContextProvider = ({ children }) => {
     setBaseUrl,
     prompt,
     setPrompt,
-    setKey: (secretKey) => window.electron.ipc.invoke('set-ai-key', secretKey),
-    getKey: () => window.electron.ipc.invoke('get-ai-key'),
+    setKey: (secretKey) =>
+      window.electron.ipc.invoke('set-ai-key', secretKey, aiProvider),
+    getKey: () => window.electron.ipc.invoke('get-ai-key', aiProvider),
     validKey: checkApiKeyValidity,
-    deleteKey: () => window.electron.ipc.invoke('delete-ai-key'),
+    deleteKey: () => window.electron.ipc.invoke('delete-ai-key', aiProvider),
     updateSettings: (newPrompt) =>
-      updateCurrentPile({ ...currentPile, AIPrompt: newPrompt }),
+      updateCurrentJournal({ ...currentJournal, AIPrompt: newPrompt }),
     model,
     setModel,
     embeddingModel,
     setEmbeddingModel,
     generateCompletion,
     prepareCompletionContext,
-    pileAIProvider,
-    setPileAIProvider,
+    aiProvider,
+    setAiProvider,
   };
 
   return (

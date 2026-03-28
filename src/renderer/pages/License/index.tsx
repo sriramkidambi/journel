@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import styles from './License.module.scss';
 import { TrashIcon } from 'renderer/icons';
 import { Link } from 'react-router-dom';
-import { usePilesContext } from '../../context/PilesContext';
+import { useJournalsContext } from '../../context/JournalsContext';
 
-const pilesList = ['Users/uj/Personal', 'Users/uj/Startup', 'Users/uj/School'];
+const journalsList = [
+  'Users/uj/Personal',
+  'Users/uj/Startup',
+  'Users/uj/School',
+];
 
 export default function License() {
-  const { piles } = usePilesContext();
+  const { journals } = useJournalsContext();
   const [folderExists, setFolderExists] = useState(false);
 
   useEffect(() => {}, []);
@@ -22,7 +26,7 @@ export default function License() {
       </div>
       <div className={styles.text}>
         <b>The MIT License (MIT)</b> <br />
-        <br /> Copyright (c) 2023-present Integrofy LLC <br />
+        <br /> Copyright (c) 2026 Integrofy LLC <br />
         <br />
         Permission is hereby granted, free of charge, to any person obtaining a
         copy of this software and associated documentation files (the

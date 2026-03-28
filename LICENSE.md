@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2023-present Integrofy LLC
+Copyright (c) 2026 Integrofy LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,11 @@ SOFTWARE.
 
 Brand License
 
-The Journel name, associated logos, and branding elements are proprietary and may not be used without explicit permission.
+The Journal name, associated logos, and branding elements are proprietary and may not be used without explicit permission.
 
 These elements include but are not limited to:
-- The name "Journel"
+
+- The name "Journal"
 - The logo and icon designs
 - Any associated taglines or slogans
 

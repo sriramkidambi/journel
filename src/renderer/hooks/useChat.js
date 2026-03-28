@@ -11,7 +11,7 @@ const useChat = () => {
       {
         role: 'system',
         content:
-          'You are a helpful assistant within a digital journaling app called Journel.',
+          'You are a helpful assistant within a digital journaling app called Journal.',
       },
       {
         role: 'system',
@@ -28,7 +28,7 @@ const useChat = () => {
       },
       { role: 'system', content: 'The user starts the conversation:' },
     ],
-    [prompt, latestThreads]
+    [prompt, latestThreads],
   );
 
   const [messages, setMessages] = useState(STARTER);
@@ -54,7 +54,7 @@ const useChat = () => {
         { role: 'user', content: message },
       ];
     },
-    [messages, vectorSearch, getThreadsAsText]
+    [messages, vectorSearch, getThreadsAsText],
   );
 
   const getAIResponse = useCallback(
@@ -62,7 +62,7 @@ const useChat = () => {
       setMessages(messages);
       await generateCompletion(messages, callback);
     },
-    [generateCompletion]
+    [generateCompletion],
   );
 
   return { addMessage, getAIResponse, resetMessages };

@@ -8,7 +8,7 @@ const axios = axiosBase.create({
 });
 
 // Setting the headers directly on the instance
-axios.defaults.headers.common['User-Agent'] = 'Mozilla/5.0 Journel/1.0';
+axios.defaults.headers.common['User-Agent'] = 'Mozilla/5.0 Journal/1.0';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 export const getLinkPreview = async (url) => {
@@ -100,7 +100,7 @@ export const getLinkContent = async (url) => {
 
     // Some content we want to filter out
     $(
-      'script, style, iframe, noscript, nav, header, footer, .nav, .menu, .footer'
+      'script, style, iframe, noscript, nav, header, footer, .nav, .menu, .footer',
     ).remove();
 
     let contentSections = [];
