@@ -12,11 +12,17 @@ const postFormat = {
   isAI: false,
 };
 
-const getDirectoryPath = (filePath) => {
+const getDirectoryPath = async (filePath) => {
   const isAbsolute = filePath.startsWith('/');
   const pathArr = filePath.split(/[/\\]/);
   pathArr.pop();
-  let directoryPath = window.electron.joinPath(...pathArr);
+  const result = await window.electron.path.join(...pathArr);
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to join path');
+  }
+  
+  let directoryPath = result.data;
 
   if (isAbsolute && !directoryPath.startsWith('/')) {
     directoryPath = '/' + directoryPath;
@@ -40,54 +46,56 @@ const getFormattedTimestamp = () => {
   return fileName;
 };
 
-const getFilePathForNewPost = (basePath, timestamp = new Date()) => {
+const getFilePathForNewPost = async (basePath, timestamp = new Date()) => {
   const date = new Date();
   const month = date.toLocaleString('default', { month: 'short' });
   const year = date.getFullYear().toString();
   const fileName = getFormattedTimestamp();
-  const path = window.electron.joinPath(basePath, year, month, fileName);
-
-  return path;
+  const result = await window.electron.path.join(basePath, year, month, fileName);
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to create file path');
+  }
+  
+  return result.data;
 };
 
-const createDirectory = (directoryPath) => {
-  return window.electron.mkdir(directoryPath);
+const createDirectory = async (directoryPath) => {
+  const result = await window.electron.file.mkdir(directoryPath);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to create directory');
+  }
+  return result.data;
 };
 
 const getFiles = async (dir) => {
-  const files = await window.electron.getFiles(dir);
-
-  return files;
+  const result = await window.electron.journals.getFiles(dir);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to get files');
+  }
+  return result.data;
 };
 
-const saveFile = (path, file) => {
-  return new Promise((resolve, reject) => {
-    window.electron.writeFile(path, file, (err) => {
-      if (err) {
-        console.error('Error writing to file.', err);
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+const saveFile = async (path, file) => {
+  const result = await window.electron.file.write(path, file);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to write file');
+  }
 };
 
-const deleteFile = (path) => {
-  return new Promise((resolve, reject) => {
-    window.electron.deleteFile(path, (err) => {
-      if (err) {
-        console.error('Error deleting file.', err);
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+const deleteFile = async (path) => {
+  const result = await window.electron.file.delete(path);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to delete file');
+  }
 };
 
-const generateMarkdown = (content, data) => {
-  return window.electron.ipc.invoke('matter-stringify', { content, data });
+const generateMarkdown = async (content, data) => {
+  const result = await window.electron.matter.stringify(content, data);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to stringify matter');
+  }
+  return result.data;
 };
 
 export {

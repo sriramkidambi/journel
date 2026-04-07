@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run tests before pushing
+echo "Running tests before push..."
+npm test
+
+# Check for duplicate code
+echo "Checking for duplicate code..."
+npx jscpd --reporters console --threshold 10
+
+# Check for unused dependencies
+echo "Checking for unused dependencies..."
+npx knip --no-exit-code
+
+echo "Pre-push checks completed."

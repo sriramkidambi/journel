@@ -45,47 +45,63 @@ export const JournalsContextProvider = ({ children }) => {
   }, [location.pathname]);
 
   const getConfig = async () => {
-    const configFilePath = window.electron.getConfigPath();
+    const result = await window.electron.config.getPath();
+    if (!result.success) {
+      console.error('Failed to get config path:', result.error);
+      setJournals([]);
+      return;
+    }
+    const configFilePath = result.data;
 
     // Setup new journals.json if it doesn't exist,
     // or read in the existing
-    if (!window.electron.existsSync(configFilePath)) {
-      window.electron.writeFile(configFilePath, JSON.stringify([]), (err) => {
-        if (err) return;
-        setJournals([]);
-      });
+    const existsResult = await window.electron.file.exists(configFilePath);
+    if (!existsResult.success || !existsResult.data) {
+      const writeResult = await window.electron.file.write(configFilePath, JSON.stringify([]));
+      if (!writeResult.success) {
+        console.error('Failed to create config:', writeResult.error);
+        return;
+      }
+      setJournals([]);
     } else {
-      await window.electron.readFile(configFilePath, (err, data) => {
-        if (err) return;
-        const jsonData = JSON.parse(data);
+      const readResult = await window.electron.file.read(configFilePath);
+      if (!readResult.success) {
+        console.error('Failed to read config:', readResult.error);
+        return;
+      }
+      try {
+        const jsonData = JSON.parse(readResult.data);
         setJournals(jsonData);
-      });
+      } catch (e) {
+        console.error('Failed to parse config:', e);
+        setJournals([]);
+      }
     }
   };
 
-  const getCurrentJournalPath = (appendPath = '') => {
+  const getCurrentJournalPath = async (appendPath = '') => {
     if (!currentJournal) return;
     const journal = journals.find((item) => item.name === currentJournal.name);
-    const resolvedPath = window.electron.joinPath(journal.path, appendPath);
-    return resolvedPath;
+    const result = await window.electron.path.join(journal.path, appendPath);
+    return result.success ? result.data : null;
   };
 
   const writeConfig = async (nextJournals) => {
     if (!nextJournals) return;
-    const configFilePath = window.electron.getConfigPath();
-    window.electron.writeFile(
+    const result = await window.electron.config.getPath();
+    if (!result.success) return;
+    const configFilePath = result.data;
+    
+    const writeResult = await window.electron.file.write(
       configFilePath,
-      JSON.stringify(nextJournals),
-      (err) => {
-        if (err) {
-          console.error('Error writing to config');
-          return;
-        }
-      },
+      JSON.stringify(nextJournals)
     );
+    if (!writeResult.success) {
+      console.error('Error writing to config:', writeResult.error);
+    }
   };
 
-  const createJournal = (name = '', selectedPath = null) => {
+  const createJournal = async (name = '', selectedPath = null) => {
     if (name === '' && selectedPath == null) return;
 
     let journalPath = selectedPath;
@@ -95,9 +111,21 @@ export const JournalsContextProvider = ({ children }) => {
     }
 
     // If selected directory is not empty, create a new directory
-    if (!window.electron.isDirEmpty(selectedPath)) {
-      journalPath = window.electron.joinPath(selectedPath, name);
-      window.electron.mkdir(journalPath);
+    const isEmptyResult = await window.electron.file.isDirEmpty(selectedPath);
+    if (!isEmptyResult.success) {
+      console.error('Failed to check if directory is empty:', isEmptyResult.error);
+      return;
+    }
+    
+    if (!isEmptyResult.data) {
+      const joinResult = await window.electron.path.join(selectedPath, name);
+      if (!joinResult.success) return;
+      journalPath = joinResult.data;
+      const mkdirResult = await window.electron.file.mkdir(journalPath);
+      if (!mkdirResult.success) {
+        console.error('Failed to create journal directory:', mkdirResult.error);
+        return;
+      }
     }
 
     const nextJournals = [{ name, path: journalPath }, ...journals];
@@ -159,11 +187,6 @@ export const JournalsContextProvider = ({ children }) => {
     setTheme,
     updateCurrentJournal,
     journalsList: journals,
-    getCurrentJournalPath,
-    createJournal,
-    currentJournal,
-    deleteJournal,
-    updateCurrentJournal,
   };
 
   return (

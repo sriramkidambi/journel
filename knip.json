@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main/main.ts",
+    "src/renderer/index.tsx",
+    "src/__tests__/*.test.ts{,x}"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "src/**/*.js"],
+  "ignore": ["**/*.d.ts", "**/*.test.ts{,x}", ".erb/**/*"],
+  "ignoreDependencies": [
+    "@electron/notarize",
+    "electron-debug",
+    "electron-updater",
+    "electron-log",
+    "electron-settings",
+    "source-map-support"
+  ]
+}

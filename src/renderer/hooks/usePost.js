@@ -51,8 +51,14 @@ function usePost(
 
   useEffect(() => {
     if (!postPath) return;
-    const fullPath = window.electron.joinPath(getCurrentJournalPath(), postPath);
-    setPath(fullPath);
+    const getFullPath = async () => {
+      const journalPath = await getCurrentJournalPath();
+      const result = await window.electron.path.join(journalPath, postPath);
+      if (result.success) {
+        setPath(result.data);
+      }
+    };
+    getFullPath();
   }, [postPath, currentJournal]);
 
   useEffect(() => {
@@ -72,8 +78,8 @@ function usePost(
 
       const saveToPath = path
         ? path
-        : fileOperations.getFilePathForNewPost(currentJournal.path);
-      const directoryPath = fileOperations.getDirectoryPath(saveToPath);
+        : await fileOperations.getFilePathForNewPost(currentJournal.path);
+      const directoryPath = await fileOperations.getDirectoryPath(saveToPath);
       const now = new Date().toISOString();
       const content = post.content;
       const data = {
@@ -98,13 +104,20 @@ function usePost(
           await addReplyToParent(parentPostPath, saveToPath);
         }
 
+        const sepResult = await window.electron.path.separator();
+        const sep = sepResult.success ? sepResult.data : '/';
+        const journalPath = await getCurrentJournalPath();
         const postRelativePath = saveToPath.replace(
-          getCurrentJournalPath() + window.electron.pathSeparator,
+          journalPath + sep,
           ''
         );
         prependIndex(postRelativePath, data); // Add the file to the index
         addIndex(postRelativePath, parentPostPath); // Add the file to the index
-        window.electron.ipc.invoke('tags-sync', saveToPath); // Sync tags
+        const updateResult = await window.electron.journals.updateFile(saveToPath, saveToPath);
+        if (updateResult.success) {
+          // Sync tags via IPC
+          window.electron.ipc.sendMessage('tags-sync', saveToPath);
+        }
         console.timeEnd('post-time');
       } catch (error) {
         console.error(`Error writing file: ${saveToPath}`);
@@ -115,9 +128,11 @@ function usePost(
   );
 
   const addReplyToParent = async (parentPostPath, replyPostPath) => {
-    const relativeReplyPath = window.electron.joinPath(
-      ...replyPostPath.split(/[/\\]/).slice(-3)
-    );
+    const pathArr = replyPostPath.split(/[/\\]/).slice(-3);
+    const joinResult = await window.electron.path.join(...pathArr);
+    if (!joinResult.success) return;
+    
+    const relativeReplyPath = joinResult.data;
     const fullParentPostPath = getCurrentJournalPath(parentPostPath);
     const parentPost = await getPost(fullParentPostPath);
     const content = parentPost.content;
@@ -133,11 +148,11 @@ function usePost(
 
   const deletePost = useCallback(async () => {
     if (!postPath) return null;
-    const fullPostPath = getCurrentJournalPath(postPath);
+    const fullPostPath = await getCurrentJournalPath(postPath);
 
     // if reply, remove from parent
     if (post.data.isReply && parentPostPath) {
-      const fullParentPostPath = getCurrentJournalPath(parentPostPath);
+      const fullParentPostPath = await getCurrentJournalPath(parentPostPath);
       const parentPost = await getPost(fullParentPostPath);
       const content = parentPost.content;
       const newReplies = parentPost.data.replies.filter((p) => {

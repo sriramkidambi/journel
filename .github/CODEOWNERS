@@ -1,0 +1,13 @@
+# Global code owners
+* @sriramkidambi
+
+# Main process code
+/src/main/ @sriramkidambi
+
+# Renderer/UI code
+/src/renderer/ @sriramkidambi
+
+# Configuration files
+/.github/ @sriramkidambi
+/.erb/ @sriramkidambi
+*.config.* @sriramkidambi

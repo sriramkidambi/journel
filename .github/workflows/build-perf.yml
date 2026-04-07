@@ -1,0 +1,54 @@
+name: Build Performance Tracking
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-perf:
+    name: Build Performance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build with timing
+        run: |
+          echo "::group::Build Timing"
+          START=$(date +%s)
+          npm run build
+          END=$(date +%s)
+          DURATION=$((END - START))
+          echo "Build duration: ${DURATION}s"
+          echo "BUILD_DURATION=${DURATION}" >> $GITHUB_ENV
+          echo "::endgroup::"
+
+      - name: Bundle size analysis
+        run: |
+          echo "::group::Bundle Size"
+          du -sh dist/ || true
+          ls -lah dist/ || true
+          echo "::endgroup::"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📊 Build Performance Report\n\n- **Duration**: ${process.env.BUILD_DURATION}s\n- **Status**: ✅ Complete`
+            })

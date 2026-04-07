@@ -10,12 +10,14 @@ import {
 export const getPost = async (postPath) => {
   try {
     if (!postPath) return;
-    const fileContent = await window.electron.ipc.invoke('get-file', postPath);
-    const parsed = await window.electron.ipc.invoke(
-      'matter-parse',
-      fileContent
-    );
-    const post = { content: parsed.content, data: parsed.data };
+    const result = await window.electron.journals.getFile(postPath);
+    if (!result.success || !result.data) return null;
+    
+    const fileContent = result.data;
+    const parsedResult = await window.electron.matter.parse(fileContent);
+    if (!parsedResult.success || !parsedResult.data) return null;
+    
+    const post = { content: parsedResult.data.content, data: parsedResult.data.data };
     return post;
   } catch (error) {
     // TODO: check and cleanup after these files
@@ -24,35 +26,38 @@ export const getPost = async (postPath) => {
 
 export const attachToPostCreator =
   (setPost, getCurrentJournalPath) => async (imageData, fileExtension) => {
-    const storePath = getCurrentJournalPath();
+    const storePath = await getCurrentJournalPath();
+    if (!storePath) return;
 
     let newAttachments = [];
     if (imageData) {
       // save image data to a file
-      const newFilePath = await window.electron.ipc.invoke('save-file', {
+      const result = await window.electron.journals.saveFile({
         fileData: imageData,
         fileExtension: fileExtension,
         storePath: storePath,
       });
 
-      if (newFilePath) {
-        newAttachments.push(newFilePath);
+      if (result.success && result.data) {
+        newAttachments.push(result.data);
       } else {
-        console.error('Failed to save the pasted image.');
+        console.error('Failed to save the pasted image:', result.error);
       }
     } else {
-      newAttachments = await window.electron.ipc.invoke('open-file', {
+      const openResult = await window.electron.journals.openFile({
         storePath: storePath,
       });
+      if (openResult.success && openResult.data) {
+        newAttachments = openResult.data;
+      }
     }
     // Attachments are stored relative to the base path from the
     // base directory of the pile
-    const correctedPaths = newAttachments.map((path) => {
+    const correctedPaths = await Promise.all(newAttachments.map(async (path) => {
       const pathArr = path.split(/[/\\]/).slice(-4);
-      const newPath = window.electron.joinPath(...pathArr);
-
-      return newPath;
-    });
+      const joinResult = await window.electron.path.join(...pathArr);
+      return joinResult.success ? joinResult.data : path;
+    }));
 
     setPost((post) => {
       const attachments = [...correctedPaths, ...post.data.attachments];
@@ -66,7 +71,7 @@ export const attachToPostCreator =
   };
 
 export const detachFromPostCreator =
-  (setPost, getCurrentJournalPath) => (attachmentPath) => {
+  (setPost, getCurrentJournalPath) => async (attachmentPath) => {
     setPost((post) => {
       let newPost = JSON.parse(JSON.stringify(post));
       const newAtt = newPost.data.attachments.filter(
@@ -74,15 +79,20 @@ export const detachFromPostCreator =
       );
 
       newPost.data.attachments = newAtt;
-
-      const fullPath = window.electron.joinPath(
-        getCurrentJournalPath(),
-        attachmentPath
-      );
-
-      window.electron.deleteFile(fullPath, (err) => {
-        if (err) {
-          console.error('There was an error:', err);
+      
+      // Delete the file asynchronously
+      getCurrentJournalPath().then(async (journalPath) => {
+        if (!journalPath) return;
+        const joinResult = await window.electron.path.join(
+          journalPath,
+          attachmentPath
+        );
+        if (!joinResult.success) return;
+        
+        const fullPath = joinResult.data;
+        const deleteResult = await window.electron.file.delete(fullPath);
+        if (!deleteResult.success) {
+          console.error('There was an error:', deleteResult.error);
         } else {
           console.log('File was deleted successfully');
         }
