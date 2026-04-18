@@ -40,3 +40,7 @@ Many thanks and appreciation to all these people and projects for their contribu
 
 - [Zach Bogart](https://twitter.com/zachbogart): for the icon design.
 - [Electron react boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate): for making it easier to launch desktop apps.
+
+### Forked from
+
+This project is a fork of the original Pile project by [UdaraJay](https://github.com/UdaraJay). This fork is not connected to the original application anymore; it is a personal level fork. The original repository can be found at https://github.com/UdaraJay/Pile. To support the original project, consider starring the repo, opening issues, or contributing. The icon will be updated soon.
