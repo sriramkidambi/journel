@@ -69,8 +69,8 @@ pnpm test
 # Run tests with coverage
 pnpm run test:coverage
 
-# Run tests in CI mode (with coverage reporting)
-pnpm run test:ci
+# Run tests with coverage reporting
+pnpm run test:coverage
 ```
 
 ### Code Quality
